@@ -1,5 +1,84 @@
--- RTCM Bible — seed data.
--- Books + verses are imported by `npm run import:bible` (not here).
+-- RTCM Bible — seed data. Run after supabase/migrations/0001_init.sql.
+-- Verse text is imported separately by `npm run import:bible`; the canonical
+-- book registry is seeded here so the quizzes' foreign keys resolve without
+-- depending on the import having run first.
+
+-- ============================================================
+-- Books (canonical registry — mirrors src/lib/books.js)
+-- ============================================================
+insert into books (code, testament, sort_order, name_en, name_tl, chapter_count) values
+  ('GEN', 'OT', 1, 'Genesis', 'Genesis', 50),
+  ('EXO', 'OT', 2, 'Exodus', 'Exodo', 40),
+  ('LEV', 'OT', 3, 'Leviticus', 'Levitico', 27),
+  ('NUM', 'OT', 4, 'Numbers', 'Mga Bilang', 36),
+  ('DEU', 'OT', 5, 'Deuteronomy', 'Deuteronomio', 34),
+  ('JOS', 'OT', 6, 'Joshua', 'Josue', 24),
+  ('JDG', 'OT', 7, 'Judges', 'Mga Hukom', 21),
+  ('RUT', 'OT', 8, 'Ruth', 'Ruth', 4),
+  ('1SA', 'OT', 9, '1 Samuel', '1 Samuel', 31),
+  ('2SA', 'OT', 10, '2 Samuel', '2 Samuel', 24),
+  ('1KI', 'OT', 11, '1 Kings', '1 Mga Hari', 22),
+  ('2KI', 'OT', 12, '2 Kings', '2 Mga Hari', 25),
+  ('1CH', 'OT', 13, '1 Chronicles', '1 Mga Cronica', 29),
+  ('2CH', 'OT', 14, '2 Chronicles', '2 Mga Cronica', 36),
+  ('EZR', 'OT', 15, 'Ezra', 'Ezra', 10),
+  ('NEH', 'OT', 16, 'Nehemiah', 'Nehemias', 13),
+  ('EST', 'OT', 17, 'Esther', 'Ester', 10),
+  ('JOB', 'OT', 18, 'Job', 'Job', 42),
+  ('PSA', 'OT', 19, 'Psalms', 'Mga Awit', 150),
+  ('PRO', 'OT', 20, 'Proverbs', 'Mga Kawikaan', 31),
+  ('ECC', 'OT', 21, 'Ecclesiastes', 'Eclesiastes', 12),
+  ('SNG', 'OT', 22, 'Song of Solomon', 'Ang Awit ni Solomon', 8),
+  ('ISA', 'OT', 23, 'Isaiah', 'Isaias', 66),
+  ('JER', 'OT', 24, 'Jeremiah', 'Jeremias', 52),
+  ('LAM', 'OT', 25, 'Lamentations', 'Mga Panaghoy', 5),
+  ('EZK', 'OT', 26, 'Ezekiel', 'Ezekiel', 48),
+  ('DAN', 'OT', 27, 'Daniel', 'Daniel', 12),
+  ('HOS', 'OT', 28, 'Hosea', 'Oseas', 14),
+  ('JOL', 'OT', 29, 'Joel', 'Joel', 3),
+  ('AMO', 'OT', 30, 'Amos', 'Amos', 9),
+  ('OBA', 'OT', 31, 'Obadiah', 'Obadias', 1),
+  ('JON', 'OT', 32, 'Jonah', 'Jonas', 4),
+  ('MIC', 'OT', 33, 'Micah', 'Mikas', 7),
+  ('NAM', 'OT', 34, 'Nahum', 'Nahum', 3),
+  ('HAB', 'OT', 35, 'Habakkuk', 'Habacuc', 3),
+  ('ZEP', 'OT', 36, 'Zephaniah', 'Sofonias', 3),
+  ('HAG', 'OT', 37, 'Haggai', 'Hagai', 2),
+  ('ZEC', 'OT', 38, 'Zechariah', 'Zacarias', 14),
+  ('MAL', 'OT', 39, 'Malachi', 'Malakias', 4),
+  ('MAT', 'NT', 40, 'Matthew', 'Mateo', 28),
+  ('MRK', 'NT', 41, 'Mark', 'Marcos', 16),
+  ('LUK', 'NT', 42, 'Luke', 'Lucas', 24),
+  ('JHN', 'NT', 43, 'John', 'Juan', 21),
+  ('ACT', 'NT', 44, 'Acts', 'Mga Gawa', 28),
+  ('ROM', 'NT', 45, 'Romans', 'Mga Taga-Roma', 16),
+  ('1CO', 'NT', 46, '1 Corinthians', '1 Mga Taga-Corinto', 16),
+  ('2CO', 'NT', 47, '2 Corinthians', '2 Mga Taga-Corinto', 13),
+  ('GAL', 'NT', 48, 'Galatians', 'Mga Taga-Galacia', 6),
+  ('EPH', 'NT', 49, 'Ephesians', 'Mga Taga-Efeso', 6),
+  ('PHP', 'NT', 50, 'Philippians', 'Mga Taga-Filipos', 4),
+  ('COL', 'NT', 51, 'Colossians', 'Mga Taga-Colosas', 4),
+  ('1TH', 'NT', 52, '1 Thessalonians', '1 Mga Taga-Tesalonica', 5),
+  ('2TH', 'NT', 53, '2 Thessalonians', '2 Mga Taga-Tesalonica', 3),
+  ('1TI', 'NT', 54, '1 Timothy', '1 Timoteo', 6),
+  ('2TI', 'NT', 55, '2 Timothy', '2 Timoteo', 4),
+  ('TIT', 'NT', 56, 'Titus', 'Tito', 3),
+  ('PHM', 'NT', 57, 'Philemon', 'Filemon', 1),
+  ('HEB', 'NT', 58, 'Hebrews', 'Mga Hebreo', 13),
+  ('JAS', 'NT', 59, 'James', 'Santiago', 5),
+  ('1PE', 'NT', 60, '1 Peter', '1 Pedro', 5),
+  ('2PE', 'NT', 61, '2 Peter', '2 Pedro', 3),
+  ('1JN', 'NT', 62, '1 John', '1 Juan', 5),
+  ('2JN', 'NT', 63, '2 John', '2 Juan', 1),
+  ('3JN', 'NT', 64, '3 John', '3 Juan', 1),
+  ('JUD', 'NT', 65, 'Jude', 'Judas', 1),
+  ('REV', 'NT', 66, 'Revelation', 'Pahayag', 22)
+on conflict (code) do update set
+  testament = excluded.testament,
+  sort_order = excluded.sort_order,
+  name_en = excluded.name_en,
+  name_tl = excluded.name_tl,
+  chapter_count = excluded.chapter_count;
 
 -- ============================================================
 -- Badges (starter set)

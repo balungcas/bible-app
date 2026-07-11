@@ -33,7 +33,7 @@ Without a `.env`, the app runs in demo mode. Data (account, journal, XP) stays i
 
 1. Create a Supabase project.
 2. Run `supabase/migrations/0001_init.sql` in the SQL editor (schema + RLS + leaderboard).
-3. Run `supabase/seed.sql` (badges, sample churches, sample devotions/quizzes).
+3. Run `supabase/seed.sql` (book registry, badges, sample churches, sample devotions/quizzes).
 4. Import the Bible text (one-time job, batched at 1,000 rows):
    ```bash
    SUPABASE_URL=https://<ref>.supabase.co \
