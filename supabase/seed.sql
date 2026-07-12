@@ -115,7 +115,9 @@ insert into devotions (publish_date, title, scripture_ref, body, author) values
    'RTCM Devotions Team'),
   (current_date + 2, 'Be Doers of the Word', 'James 1:22-25',
    E'James warns us about the mirror problem: hearing the Word and walking away unchanged is like glancing at your reflection and immediately forgetting your own face.\n\nThe A in SOAK — Application — is where the mirror becomes a window. Today, do not close your Bible until you have written one concrete, doable act of obedience. Small is fine. Forgotten is not.',
-   'RTCM Devotions Team');
+   'RTCM Devotions Team')
+on conflict (publish_date) do update
+  set title = excluded.title, scripture_ref = excluded.scripture_ref, body = excluded.body, author = excluded.author;
 
 -- ============================================================
 -- Quizzes (sample set tied to chapters)
