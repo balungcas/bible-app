@@ -65,7 +65,7 @@ export default function AuthPage() {
           </button>
 
           <p className="text-center text-xs text-stone-400">
-            Your data is securely stored in our database.
+            Enter the same name each time to continue your progress.
           </p>
         </form>
       </div>

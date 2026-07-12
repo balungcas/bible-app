@@ -21,26 +21,44 @@ export function createSupabaseBackend(url, anonKey) {
       return user ? { id: user.id, email: user.email } : null;
     },
 
-    // Name + church only — anonymous auth. The session persists in this
-    // browser; there is no cross-device login until email auth returns.
+    // Name-only login. The account is derived from the name itself (synthetic
+    // email + deterministic password), so typing the same name always resumes
+    // the same profile — on any device — instead of minting a new one.
     async signUp({ name, churchId }) {
-      const { data, error } = await supabase.auth.signInAnonymously({
+      const slug = name
+        .toLowerCase()
+        .normalize('NFKD')
+        .replace(/[̀-ͯ]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+      if (!slug) throw new Error('Please enter a valid name.');
+      const email = `${slug}@members.rtcm-tunasan.app`;
+      const password = `rtcm-tunasan::${slug}::soak-v1`;
+
+      // Existing account for this name? Resume it.
+      const { data: signIn, error: signInErr } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (!signInErr) return { id: signIn.user.id, email: null };
+
+      // First time this name logs in — create the account.
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
         options: { data: { name, church_id: churchId } },
       });
-      if (error) {
-        if (error.code === 'anonymous_provider_disabled') {
-          throw new Error(
-            'Anonymous sign-ins are disabled for this Supabase project. Enable them under Authentication → Sign In / Providers.'
-          );
-        }
-        throw new Error(error.message);
+      if (error) throw new Error(error.message);
+      if (!data.session) {
+        throw new Error(
+          'Could not start a session. In Supabase, go to Authentication → Sign In / Providers → Email and turn OFF "Confirm email", then try again.'
+        );
       }
-      const user = data.user;
       const { error: pErr } = await supabase
         .from('profiles')
-        .insert({ id: user.id, name, church_id: churchId });
-      throwIf(pErr);
-      return { id: user.id, email: null };
+        .insert({ id: data.user.id, name, church_id: churchId });
+      if (pErr && pErr.code !== '23505') throw new Error(pErr.message);
+      return { id: data.user.id, email: null };
     },
 
     async signOut() {
