@@ -1,0 +1,13 @@
+# Flutter/Dart
+.dart_tool/
+.packages
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+*.iml
+.idea/
+
+# Platform folders are generated with `flutter create .` (see README);
+# once you generate and customize them, remove these lines and commit them.
+android/
+ios/
