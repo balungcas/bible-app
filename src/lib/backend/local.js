@@ -19,7 +19,7 @@ function save(db) {
 
 function db() {
   const d = load();
-  d.users ??= {};        // email -> { id, email, password, name, church_id }
+  d.users ??= {};        // id -> { id, name, church_id }
   d.churches ??= [...SAMPLE_CHURCHES];
   d.entries ??= [];      // soak entries
   d.xp ??= [];           // xp log rows
@@ -40,27 +40,19 @@ export function createLocalBackend() {
     async getSession() {
       const d = db();
       if (!d.session) return null;
-      const user = Object.values(d.users).find((u) => u.id === d.session);
-      return user ? { id: user.id, email: user.email } : null;
+      const user = d.users[d.session];
+      return user ? { id: user.id, email: null } : null;
     },
 
-    async signUp({ email, password, name, churchId }) {
+    // Name + church only — mirrors the anonymous-auth flow of the Supabase
+    // backend. The session persists in this browser's localStorage.
+    async signUp({ name, churchId }) {
       const d = db();
-      if (d.users[email]) throw new Error('An account with this email already exists.');
-      const user = { id: uid(), email, password, name, church_id: churchId };
-      d.users[email] = user;
+      const user = { id: uid(), name, church_id: churchId };
+      d.users[user.id] = user;
       d.session = user.id;
       save(d);
-      return { id: user.id, email };
-    },
-
-    async signIn({ email, password }) {
-      const d = db();
-      const user = d.users[email];
-      if (!user || user.password !== password) throw new Error('Invalid email or password.');
-      d.session = user.id;
-      save(d);
-      return { id: user.id, email };
+      return { id: user.id, email: null };
     },
 
     async signOut() {

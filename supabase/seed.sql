@@ -96,19 +96,12 @@ on conflict (code) do update
   set name = excluded.name, description = excluded.description, icon = excluded.icon;
 
 -- ============================================================
--- Churches (sample seed — replace with the official UPC PH directory)
+-- Churches (hardcoded for RTCM-Tunasan deployment)
 -- ============================================================
-insert into churches (name, region, approved) values
-  ('UPC Makati',       'NCR',          true),
-  ('UPC Quezon City',  'NCR',          true),
-  ('UPC Caloocan',     'NCR',          true),
-  ('UPC Antipolo',     'Region IV-A',  true),
-  ('UPC Batangas',     'Region IV-A',  true),
-  ('UPC Cebu',         'Region VII',   true),
-  ('UPC Davao',        'Region XI',    true),
-  ('UPC Baguio',       'CAR',          true),
-  ('UPC Iloilo',       'Region VI',    true),
-  ('UPC Cagayan de Oro', 'Region X',   true);
+insert into churches (id, name, region, approved) values
+  ('a1b2c3d4-e5f6-47a8-9b0c-1d2e3f4a5b6c', 'RTCM-Tunasan', 'NCR', true)
+on conflict (id) do update
+  set name = excluded.name, region = excluded.region, approved = excluded.approved;
 
 -- ============================================================
 -- Devotions (sample content so Today has something to show)

@@ -50,16 +50,11 @@ export function AppProvider({ children }) {
     })();
   }, []);
 
-  const signIn = useCallback(async (creds) => {
-    const u = await backend.signIn(creds);
-    setUser(u);
-    setState(await loadState(u.id));
-  }, []);
-
   const signUp = useCallback(async (fields) => {
     const u = await backend.signUp(fields);
     setUser(u);
     setState(await loadState(u.id));
+    return u;
   }, []);
 
   const signOut = useCallback(async () => {
@@ -74,7 +69,6 @@ export function AppProvider({ children }) {
     state,
     booting,
     refresh,
-    signIn,
     signUp,
     signOut,
     toasts,

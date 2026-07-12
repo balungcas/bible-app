@@ -21,22 +21,26 @@ export function createSupabaseBackend(url, anonKey) {
       return user ? { id: user.id, email: user.email } : null;
     },
 
-    async signUp({ email, password, name, churchId }) {
-      const { data, error } = await supabase.auth.signUp({ email, password });
-      throwIf(error);
+    // Name + church only — anonymous auth. The session persists in this
+    // browser; there is no cross-device login until email auth returns.
+    async signUp({ name, churchId }) {
+      const { data, error } = await supabase.auth.signInAnonymously({
+        options: { data: { name, church_id: churchId } },
+      });
+      if (error) {
+        if (error.code === 'anonymous_provider_disabled') {
+          throw new Error(
+            'Anonymous sign-ins are disabled for this Supabase project. Enable them under Authentication → Sign In / Providers.'
+          );
+        }
+        throw new Error(error.message);
+      }
       const user = data.user;
-      if (!user) throw new Error('Check your email to confirm your account, then sign in.');
       const { error: pErr } = await supabase
         .from('profiles')
         .insert({ id: user.id, name, church_id: churchId });
       throwIf(pErr);
-      return { id: user.id, email: user.email };
-    },
-
-    async signIn({ email, password }) {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      throwIf(error);
-      return { id: data.user.id, email: data.user.email };
+      return { id: user.id, email: null };
     },
 
     async signOut() {
@@ -70,8 +74,19 @@ export function createSupabaseBackend(url, anonKey) {
         .eq('id', userId)
         .maybeSingle();
       throwIf(error);
-      if (!data) return null;
-      return { id: data.id, name: data.name, church_id: data.church_id, church: data.churches };
+      if (data) {
+        return { id: data.id, name: data.name, church_id: data.church_id, church: data.churches };
+      }
+      // No profile yet — this is the first authenticated session after an
+      // email-confirmation signup. Create it from the auth metadata.
+      const { data: userData } = await supabase.auth.getUser();
+      const meta = userData?.user?.user_metadata;
+      if (userData?.user?.id !== userId || !meta?.name) return null;
+      const { error: insErr } = await supabase
+        .from('profiles')
+        .insert({ id: userId, name: meta.name, church_id: meta.church_id || null });
+      throwIf(insErr);
+      return this.getProfile(userId);
     },
 
     async getEntries(userId) {
