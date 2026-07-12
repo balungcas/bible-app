@@ -42,15 +42,20 @@ function quizCorrectRun(attempts) {
 }
 
 export async function loadState(userId) {
-  const [profile, entries, streak, xpLog, progress, userBadges, attempts] = await Promise.all([
-    backend.getProfile(userId),
-    backend.getEntries(userId),
-    backend.getStreak(userId),
-    backend.getXpLog(userId),
-    backend.getReadingProgress(userId),
-    backend.getUserBadges(userId),
-    backend.getQuizAttempts(userId),
-  ]);
+  const [profile, entries, streak, xpLog, progress, userBadges, attempts, highlights] =
+    await Promise.all([
+      backend.getProfile(userId),
+      backend.getEntries(userId),
+      backend.getStreak(userId),
+      backend.getXpLog(userId),
+      backend.getReadingProgress(userId),
+      backend.getUserBadges(userId),
+      backend.getQuizAttempts(userId),
+      backend.getHighlights(userId),
+    ]);
+  // Keyed 'CODE/chapter/verse' -> color for O(1) lookup in the reader.
+  const highlightMap = {};
+  for (const h of highlights) highlightMap[`${h.book_code}/${h.chapter}/${h.verse}`] = h.color;
   return {
     profile,
     entries,
@@ -59,6 +64,7 @@ export async function loadState(userId) {
     progress,
     badges: userBadges.map((b) => b.badge_code),
     quizRun: quizCorrectRun(attempts),
+    highlights: highlightMap,
   };
 }
 
@@ -123,6 +129,16 @@ export async function markChapterRead(userId, version, bookCode, chapter) {
   );
   result.newBadges = await checkBadges(userId, state);
   return result;
+}
+
+// --------------------------------------------------------- Verse highlights
+export async function toggleHighlight(userId, bookCode, chapter, verse, color) {
+  // color === null removes the highlight; otherwise set/replace it.
+  if (color === null) {
+    await backend.removeHighlight(userId, bookCode, chapter, verse);
+  } else {
+    await backend.setHighlight(userId, bookCode, chapter, verse, color);
+  }
 }
 
 // ----------------------------------------------------------- Daily devotion

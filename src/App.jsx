@@ -7,6 +7,7 @@ import ReadPage from './pages/ReadPage.jsx';
 import TodayPage from './pages/TodayPage.jsx';
 import JournalPage from './pages/JournalPage.jsx';
 import CommunityPage from './pages/CommunityPage.jsx';
+import SettingsPage from './pages/SettingsPage.jsx';
 
 const TABS = [
   { id: 'read', label: 'Read', icon: '📖' },
@@ -22,7 +23,7 @@ export default function App() {
   if (booting) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <div className="text-stone-400">Loading…</div>
+        <div className="text-stone-400 dark:text-stone-500">Loading…</div>
       </div>
     );
   }
@@ -36,40 +37,51 @@ export default function App() {
 
   return (
     <div className="mx-auto flex min-h-screen max-w-3xl flex-col">
-      <header className="sticky top-0 z-20 border-b border-stone-200 bg-white/90 backdrop-blur">
+      <header className="sticky top-0 z-20 border-b border-stone-200 bg-white/90 backdrop-blur dark:border-stone-800 dark:bg-stone-900/90">
         <div className="flex items-center justify-between px-4 py-3">
           <div>
-            <h1 className="text-lg font-bold tracking-tight text-indigo-900">RTCM Bible</h1>
-            <p className="text-xs text-stone-500">Scripture · Observation · Application · Kneel</p>
+            <h1 className="text-lg font-bold tracking-tight text-indigo-900 dark:text-indigo-200">
+              RTCM Bible
+            </h1>
+            <p className="text-xs text-stone-500 dark:text-stone-400">
+              Scripture · Observation · Application · Kneel
+            </p>
           </div>
           <div className="flex items-center gap-3">
             <div
-              className={`flex items-center gap-1 rounded-full px-3 py-1 text-sm font-semibold ${
+              className={`flex items-center gap-1 rounded-full px-3 py-1 text-sm font-semibold transition ${
                 streakNow.current > 0
-                  ? 'bg-orange-100 text-orange-700'
-                  : 'bg-stone-100 text-stone-500'
+                  ? 'bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300'
+                  : 'bg-stone-100 text-stone-500 dark:bg-stone-800 dark:text-stone-400'
               }`}
               title={`Freezes available: ${state.streak?.freezes_available ?? 2}`}
             >
               🔥 {streakNow.current}
             </div>
             <div className="text-right">
-              <div className="text-xs font-semibold text-indigo-800">{level.name}</div>
-              <div className="text-xs text-stone-500">{state.xp.total.toLocaleString()} XP</div>
+              <div className="text-xs font-semibold text-indigo-800 dark:text-indigo-300">
+                {level.name}
+              </div>
+              <div className="text-xs text-stone-500 dark:text-stone-400">
+                {state.xp.total.toLocaleString()} XP
+              </div>
             </div>
             <button
-              onClick={signOut}
-              className="rounded-md px-2 py-1 text-xs text-stone-400 hover:bg-stone-100 hover:text-stone-600"
-              title="Sign out"
+              onClick={() => setTab('settings')}
+              className={`rounded-md px-2 py-1 text-lg leading-none transition hover:bg-stone-100 dark:hover:bg-stone-800 ${
+                tab === 'settings' ? 'opacity-100' : 'opacity-60 hover:opacity-100'
+              }`}
+              title="Settings"
+              aria-label="Settings"
             >
-              Sign out
+              ⚙️
             </button>
           </div>
         </div>
         {/* Level progress */}
-        <div className="h-1 w-full bg-stone-200">
+        <div className="h-1 w-full bg-stone-200 dark:bg-stone-800">
           <div
-            className="h-1 bg-indigo-600 transition-all"
+            className="h-1 bg-indigo-600 transition-all duration-500"
             style={{ width: `${Math.round(level.progress * 100)}%` }}
           />
         </div>
@@ -80,16 +92,19 @@ export default function App() {
         {tab === 'today' && <TodayPage goToJournal={() => setTab('journal')} />}
         {tab === 'journal' && <JournalPage goToToday={() => setTab('today')} />}
         {tab === 'community' && <CommunityPage />}
+        {tab === 'settings' && <SettingsPage />}
       </main>
 
-      <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-stone-200 bg-white">
+      <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900">
         <div className="mx-auto flex max-w-3xl">
           {TABS.map((t) => (
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
-              className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-xs font-medium ${
-                tab === t.id ? 'text-indigo-700' : 'text-stone-400 hover:text-stone-600'
+              className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-xs font-medium transition active:scale-95 ${
+                tab === t.id
+                  ? 'text-indigo-700 dark:text-indigo-300'
+                  : 'text-stone-400 hover:text-stone-600 dark:text-stone-500 dark:hover:text-stone-300'
               }`}
             >
               <span className="text-lg leading-none">{t.icon}</span>

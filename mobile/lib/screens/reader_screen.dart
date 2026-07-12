@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/books.dart';
+import '../core/highlights.dart';
 import '../state/app_model.dart';
 import 'home_shell.dart';
 
@@ -70,6 +71,64 @@ class _ReaderScreenState extends State<ReaderScreen> {
     } finally {
       if (mounted) setState(() => _marking = false);
     }
+  }
+
+  String? _highlightFor(int verse) =>
+      widget.model.state?.highlights['${_book!.code}/$_chapter/$verse'];
+
+  // Bottom-sheet color picker: choose a color to highlight, or Remove to clear.
+  Future<void> _pickHighlight(int verse) async {
+    final current = _highlightFor(verse);
+    final choice = await showModalBottomSheet<String?>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Highlight verse $verse',
+                  style: Theme.of(ctx).textTheme.titleMedium),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  for (final c in highlightColors)
+                    GestureDetector(
+                      onTap: () => Navigator.pop(ctx, c),
+                      child: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: highlightSwatch(c),
+                          shape: BoxShape.circle,
+                          border: current == c
+                              ? Border.all(width: 3, color: Colors.white70)
+                              : null,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              if (current != null)
+                TextButton.icon(
+                  icon: const Icon(Icons.close),
+                  label: const Text('Remove highlight'),
+                  // Sentinel '' means remove.
+                  onPressed: () => Navigator.pop(ctx, ''),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (choice == null) return; // dismissed
+    await widget.model.game.toggleHighlight(
+        widget.model.userId!, _book!.code, _chapter!, verse,
+        choice.isEmpty ? null : choice);
+    await widget.model.refresh();
   }
 
   @override
@@ -146,7 +205,9 @@ class _ReaderScreenState extends State<ReaderScreen> {
                   style: OutlinedButton.styleFrom(
                     padding: EdgeInsets.zero,
                     backgroundColor: read.contains('${_book!.code} $c')
-                        ? Colors.green.shade50
+                        ? Theme.of(context)
+                            .colorScheme
+                            .primaryContainer
                         : null,
                   ),
                   child: Text('$c'),
@@ -196,19 +257,28 @@ class _ReaderScreenState extends State<ReaderScreen> {
                       for (var i = 0; i < _versesKjv.length; i++) ...[
                         _Verse(
                             n: _versesKjv[i]['verse'] as int,
-                            text: _versesKjv[i]['text'] as String),
+                            text: _versesKjv[i]['text'] as String,
+                            color: _highlightFor(_versesKjv[i]['verse'] as int),
+                            onTap: () =>
+                                _pickHighlight(_versesKjv[i]['verse'] as int)),
                         if (i < _versesTl.length)
                           Padding(
                             padding: const EdgeInsets.only(left: 24, bottom: 8),
                             child: Text(_versesTl[i]['text'] as String,
                                 style: TextStyle(
-                                    color: Colors.indigo.shade700,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .primary,
                                     fontStyle: FontStyle.italic)),
                           ),
                       ]
                     else
                       for (final v in _version == 'KJV' ? _versesKjv : _versesTl)
-                        _Verse(n: v['verse'] as int, text: v['text'] as String),
+                        _Verse(
+                            n: v['verse'] as int,
+                            text: v['text'] as String,
+                            color: _highlightFor(v['verse'] as int),
+                            onTap: () => _pickHighlight(v['verse'] as int)),
                     const SizedBox(height: 16),
                     FilledButton(
                       onPressed: _marking || isRead ? null : _markRead,
@@ -230,26 +300,39 @@ class _ReaderScreenState extends State<ReaderScreen> {
 class _Verse extends StatelessWidget {
   final int n;
   final String text;
-  const _Verse({required this.n, required this.text});
+  final String? color; // highlight color id, or null
+  final VoidCallback? onTap;
+  const _Verse({required this.n, required this.text, this.color, this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: RichText(
-        text: TextSpan(
-          style: DefaultTextStyle.of(context)
-              .style
-              .copyWith(fontSize: 16, height: 1.5),
-          children: [
-            TextSpan(
-                text: '$n ',
-                style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.primary)),
-            TextSpan(text: text),
-          ],
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+        decoration: color == null
+            ? null
+            : BoxDecoration(
+                color: highlightBackground(color!),
+                borderRadius: BorderRadius.circular(4),
+              ),
+        child: RichText(
+          text: TextSpan(
+            style: DefaultTextStyle.of(context)
+                .style
+                .copyWith(fontSize: 16, height: 1.5),
+            children: [
+              TextSpan(
+                  text: '$n ',
+                  style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.primary)),
+              TextSpan(text: text),
+            ],
+          ),
         ),
       ),
     );

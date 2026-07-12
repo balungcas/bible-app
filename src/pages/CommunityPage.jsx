@@ -23,7 +23,7 @@ export default function CommunityPage() {
 
   if (!state.profile?.church_id) {
     return (
-      <p className="py-10 text-center text-sm text-stone-500">
+      <p className="py-10 text-center text-sm text-stone-500 dark:text-stone-400">
         Join a church on your profile to see your church's leaderboard.
       </p>
     );
@@ -41,33 +41,35 @@ export default function CommunityPage() {
 
   return (
     <div>
-      <h2 className="text-xl font-bold text-stone-900">{church?.name || 'Your church'}</h2>
-      {church?.region && <p className="text-sm text-stone-500">{church.region}</p>}
+      <h2 className="text-xl font-bold text-stone-900 dark:text-stone-100">
+        {church?.name || 'Your church'}
+      </h2>
+      {church?.region && <p className="text-sm text-stone-500 dark:text-stone-400">{church.region}</p>}
 
-      <div className="mt-4 flex rounded-lg bg-stone-200 p-1 text-sm font-medium">
+      <div className="mt-4 flex rounded-lg bg-stone-200 p-1 text-sm font-medium dark:bg-stone-800">
         <button
           onClick={() => setTab('consistency')}
-          className={`flex-1 rounded-md py-1.5 ${tab === 'consistency' ? 'bg-white shadow-sm' : 'text-stone-500'}`}
+          className={`flex-1 rounded-md py-1.5 transition ${tab === 'consistency' ? 'bg-white shadow-sm dark:bg-stone-700 dark:text-stone-100' : 'text-stone-500 dark:text-stone-400'}`}
         >
           🔥 Consistency
         </button>
         <button
           onClick={() => setTab('points')}
-          className={`flex-1 rounded-md py-1.5 ${tab === 'points' ? 'bg-white shadow-sm' : 'text-stone-500'}`}
+          className={`flex-1 rounded-md py-1.5 transition ${tab === 'points' ? 'bg-white shadow-sm dark:bg-stone-700 dark:text-stone-100' : 'text-stone-500 dark:text-stone-400'}`}
         >
           ⭐ Points · {monthName}
         </button>
       </div>
-      <p className="mt-2 text-xs text-stone-400">
+      <p className="mt-2 text-xs text-stone-400 dark:text-stone-500">
         {tab === 'consistency'
           ? 'Ranked by current SOAK streak — showing up daily is what counts.'
           : `Ranked by XP earned in ${monthName}. The points board resets monthly so everyone gets a fresh start.`}
       </p>
 
-      {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
+      {error && <p className="mt-4 text-sm text-red-600 dark:text-red-400">{error}</p>}
 
       {!sorted ? (
-        <p className="py-10 text-center text-stone-400">Loading…</p>
+        <p className="py-10 text-center text-stone-400 dark:text-stone-500">Loading…</p>
       ) : (
         <ul className="mt-4 space-y-2">
           {sorted.map((row, i) => {
@@ -76,21 +78,23 @@ export default function CommunityPage() {
             return (
               <li
                 key={row.id}
-                className={`flex items-center gap-3 rounded-xl border p-3 ${
-                  me ? 'border-indigo-300 bg-indigo-50' : 'border-stone-200 bg-white'
+                className={`flex items-center gap-3 rounded-xl border p-3 transition ${
+                  me
+                    ? 'border-indigo-300 bg-indigo-50 dark:border-indigo-700 dark:bg-indigo-950/50'
+                    : 'border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900'
                 }`}
               >
-                <span className="w-7 text-center text-sm font-bold text-stone-400">
+                <span className="w-7 text-center text-sm font-bold text-stone-400 dark:text-stone-500">
                   {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-semibold text-stone-800">
+                  <p className="truncate font-semibold text-stone-800 dark:text-stone-100">
                     {row.name}
-                    {me && <span className="ml-1 text-xs font-normal text-indigo-500">(you)</span>}
+                    {me && <span className="ml-1 text-xs font-normal text-indigo-500 dark:text-indigo-400">(you)</span>}
                   </p>
-                  <p className="text-xs text-stone-400">{level.name}</p>
+                  <p className="text-xs text-stone-400 dark:text-stone-500">{level.name}</p>
                 </div>
-                <div className="text-right text-sm font-semibold text-stone-700">
+                <div className="text-right text-sm font-semibold text-stone-700 dark:text-stone-300">
                   {tab === 'consistency' ? (
                     <>🔥 {row.current_streak}</>
                   ) : (

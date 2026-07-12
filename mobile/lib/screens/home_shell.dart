@@ -5,6 +5,7 @@ import '../state/app_model.dart';
 import 'community_screen.dart';
 import 'journal_screen.dart';
 import 'reader_screen.dart';
+import 'settings_screen.dart';
 import 'today_screen.dart';
 
 class HomeShell extends StatefulWidget {
@@ -18,6 +19,8 @@ class HomeShell extends StatefulWidget {
 class _HomeShellState extends State<HomeShell> {
   int _tab = 0;
 
+  static const _titles = ['Today', 'Read', 'Journal', 'Community'];
+
   @override
   Widget build(BuildContext context) {
     final screens = [
@@ -27,6 +30,20 @@ class _HomeShellState extends State<HomeShell> {
       CommunityScreen(model: widget.model),
     ];
     return Scaffold(
+      appBar: AppBar(
+        title: Text(_titles[_tab]),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            tooltip: 'Settings',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => SettingsScreen(model: widget.model),
+              ),
+            ),
+          ),
+        ],
+      ),
       body: SafeArea(child: IndexedStack(index: _tab, children: screens)),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _tab,

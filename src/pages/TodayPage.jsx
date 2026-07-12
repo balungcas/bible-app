@@ -34,16 +34,18 @@ export default function TodayPage({ goToJournal }) {
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-stone-500">{formatDateLong(today)}</p>
+      <p className="text-sm text-stone-500 dark:text-stone-400">{formatDateLong(today)}</p>
 
       {/* SOAK status — persistent card, soft gate (never a hard lock) */}
       {todayEntry && !showForm ? (
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-900 dark:bg-emerald-950/50">
           <div className="flex items-center gap-2">
             <span className="text-xl">✅</span>
             <div>
-              <p className="font-semibold text-emerald-900">Today's SOAK is done</p>
-              <p className="text-sm text-emerald-700">
+              <p className="font-semibold text-emerald-900 dark:text-emerald-200">
+                Today's SOAK is done
+              </p>
+              <p className="text-sm text-emerald-700 dark:text-emerald-400">
                 {todayEntry.scripture_ref} · streak {streakNow.current} 🔥
               </p>
             </div>
@@ -51,35 +53,37 @@ export default function TodayPage({ goToJournal }) {
           <div className="mt-3 flex gap-2">
             <button
               onClick={() => setShowForm(true)}
-              className="rounded-lg border border-emerald-300 bg-white px-3 py-1.5 text-xs font-medium text-emerald-800"
+              className="rounded-lg border border-emerald-300 bg-white px-3 py-1.5 text-xs font-medium text-emerald-800 dark:border-emerald-800 dark:bg-stone-900 dark:text-emerald-300"
             >
               Edit entry
             </button>
             <button
               onClick={goToJournal}
-              className="rounded-lg border border-emerald-300 bg-white px-3 py-1.5 text-xs font-medium text-emerald-800"
+              className="rounded-lg border border-emerald-300 bg-white px-3 py-1.5 text-xs font-medium text-emerald-800 dark:border-emerald-800 dark:bg-stone-900 dark:text-emerald-300"
             >
               View journal
             </button>
           </div>
         </div>
       ) : !showForm ? (
-        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
-          <p className="font-semibold text-amber-900">Your SOAK for today isn't done yet.</p>
-          <p className="mt-1 text-sm text-amber-700">
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-900 dark:bg-amber-950/40">
+          <p className="font-semibold text-amber-900 dark:text-amber-200">
+            Your SOAK for today isn't done yet.
+          </p>
+          <p className="mt-1 text-sm text-amber-700 dark:text-amber-400">
             {streakNow.current > 0
               ? `Keep your ${streakNow.current}-day streak going — it only advances when today's SOAK is complete.`
               : 'Start your streak today. A few quiet minutes in the Word is all it takes.'}
           </p>
           {state.streak?.freezes_available > 0 && (
-            <p className="mt-1 text-xs text-amber-600">
+            <p className="mt-1 text-xs text-amber-600 dark:text-amber-500">
               ❄️ {state.streak.freezes_available} streak freeze
               {state.streak.freezes_available > 1 ? 's' : ''} available if you ever miss a day.
             </p>
           )}
           <button
             onClick={() => setShowForm(true)}
-            className="mt-3 w-full rounded-xl bg-indigo-700 py-2.5 text-sm font-semibold text-white hover:bg-indigo-800"
+            className="mt-3 w-full rounded-xl bg-indigo-700 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-800 active:scale-[0.99]"
           >
             Start today's SOAK
           </button>
@@ -87,12 +91,15 @@ export default function TodayPage({ goToJournal }) {
       ) : null}
 
       {showForm && (
-        <div className="rounded-2xl border border-stone-200 bg-white p-4">
+        <div className="rounded-2xl border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="font-bold text-stone-800">
+            <h2 className="font-bold text-stone-800 dark:text-stone-100">
               {todayEntry ? "Edit today's SOAK" : "Today's SOAK"}
             </h2>
-            <button onClick={() => setShowForm(false)} className="text-sm text-stone-400">
+            <button
+              onClick={() => setShowForm(false)}
+              className="text-sm text-stone-400 dark:text-stone-500"
+            >
               Close
             </button>
           </div>
@@ -106,27 +113,29 @@ export default function TodayPage({ goToJournal }) {
 
       {/* Daily devotion */}
       {devotion && (
-        <div className="rounded-2xl border border-stone-200 bg-white p-4">
-          <p className="text-xs font-bold uppercase tracking-widest text-indigo-500">
+        <div className="rounded-2xl border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900">
+          <p className="text-xs font-bold uppercase tracking-widest text-indigo-500 dark:text-indigo-400">
             Daily Devotion
           </p>
-          <h2 className="mt-1 text-lg font-bold text-stone-900">{devotion.title}</h2>
-          <p className="text-sm text-stone-500">{devotion.scripture_ref}</p>
+          <h2 className="mt-1 text-lg font-bold text-stone-900 dark:text-stone-100">
+            {devotion.title}
+          </h2>
+          <p className="text-sm text-stone-500 dark:text-stone-400">{devotion.scripture_ref}</p>
           {devotionOpen ? (
             <>
-              <div className="mt-3 space-y-3 text-[15px] leading-relaxed text-stone-700">
+              <div className="mt-3 space-y-3 text-[15px] leading-relaxed text-stone-700 dark:text-stone-300">
                 {devotion.body.split('\n\n').map((p, i) => (
                   <p key={i}>{p}</p>
                 ))}
               </div>
               {devotion.author && (
-                <p className="mt-3 text-xs text-stone-400">— {devotion.author}</p>
+                <p className="mt-3 text-xs text-stone-400 dark:text-stone-500">— {devotion.author}</p>
               )}
             </>
           ) : (
             <button
               onClick={handleDevotionRead}
-              className="mt-3 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-sm font-medium text-indigo-700"
+              className="mt-3 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-sm font-medium text-indigo-700 transition hover:bg-indigo-100 dark:border-indigo-900 dark:bg-indigo-950/50 dark:text-indigo-300"
             >
               Read devotion {devotionReadToday ? '' : '· +15 XP'}
             </button>
@@ -178,10 +187,12 @@ function DailyQuizzes({ quizzes }) {
   }
 
   return (
-    <div className="rounded-2xl border border-stone-200 bg-white p-4">
+    <div className="rounded-2xl border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900">
       <div className="flex items-baseline justify-between">
-        <p className="text-xs font-bold uppercase tracking-widest text-indigo-500">Daily Quiz</p>
-        <p className="text-xs text-stone-400">
+        <p className="text-xs font-bold uppercase tracking-widest text-indigo-500 dark:text-indigo-400">
+          Daily Quiz
+        </p>
+        <p className="text-xs text-stone-400 dark:text-stone-500">
           {quizXpLeft > 0 ? `+5 XP each · ${quizXpLeft} left today` : 'Daily quiz XP earned ✓'}
         </p>
       </div>
@@ -193,21 +204,28 @@ function DailyQuizzes({ quizzes }) {
           const order = shuffledOrder(choices.length, `${q.id}.${todayLocal()}`);
           return (
             <div key={q.id}>
-              <p className="mb-2 text-sm font-medium text-stone-800">
+              <p className="mb-2 text-sm font-medium text-stone-800 dark:text-stone-200">
                 {qi + 1}. {q.question}
               </p>
               <div className="grid gap-1.5">
                 {order.map((i) => {
-                  let cls = 'border-stone-200 bg-white hover:border-indigo-300';
-                  if (answered && i === q.correct_index) cls = 'border-emerald-400 bg-emerald-50';
-                  else if (answered && i === chosen) cls = 'border-red-300 bg-red-50';
-                  else if (answered) cls = 'border-stone-100 bg-stone-50 text-stone-400';
+                  let cls =
+                    'border-stone-200 bg-white hover:border-indigo-300 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-200 dark:hover:border-indigo-500';
+                  if (answered && i === q.correct_index)
+                    cls =
+                      'border-emerald-400 bg-emerald-50 dark:border-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-200';
+                  else if (answered && i === chosen)
+                    cls =
+                      'border-red-300 bg-red-50 dark:border-red-700 dark:bg-red-950/50 dark:text-red-200';
+                  else if (answered)
+                    cls =
+                      'border-stone-100 bg-stone-50 text-stone-400 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-600';
                   return (
                     <button
                       key={i}
                       disabled={answered}
                       onClick={() => choose(q, i)}
-                      className={`rounded-lg border px-3 py-2 text-left text-sm ${cls}`}
+                      className={`rounded-lg border px-3 py-2 text-left text-sm transition ${cls}`}
                     >
                       {choices[i]}
                     </button>

@@ -203,6 +203,34 @@ class Backend {
     return List<Map<String, dynamic>>.from(data);
   }
 
+  Future<List<Map<String, dynamic>>> getHighlights(String userId) async {
+    final data = await _c
+        .from('verse_highlights')
+        .select('book_code, chapter, verse, color')
+        .eq('user_id', userId);
+    return List<Map<String, dynamic>>.from(data);
+  }
+
+  Future<void> setHighlight(
+          String userId, String bookCode, int chapter, int verse, String color) =>
+      _c.from('verse_highlights').upsert({
+        'user_id': userId,
+        'book_code': bookCode,
+        'chapter': chapter,
+        'verse': verse,
+        'color': color,
+      });
+
+  Future<void> removeHighlight(
+          String userId, String bookCode, int chapter, int verse) =>
+      _c
+          .from('verse_highlights')
+          .delete()
+          .eq('user_id', userId)
+          .eq('book_code', bookCode)
+          .eq('chapter', chapter)
+          .eq('verse', verse);
+
   /// Verse text straight from Supabase (populated by `npm run import:bible`).
   Future<List<Map<String, dynamic>>> getChapter(
       String version, String bookCode, int chapter) async {

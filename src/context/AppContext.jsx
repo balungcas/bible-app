@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useState } from 'rea
 import { backend } from '../lib/backend/index.js';
 import { loadState } from '../lib/game.js';
 import { BADGE_BY_CODE } from '../lib/gamification.js';
+import { getTheme, setTheme as persistTheme, watchSystemTheme } from '../lib/theme.js';
 
 const AppContext = createContext(null);
 
@@ -10,6 +11,15 @@ export function AppProvider({ children }) {
   const [state, setState] = useState(null); // { profile, entries, streak, xp, progress, badges, quizRun }
   const [booting, setBooting] = useState(true);
   const [toasts, setToasts] = useState([]);
+  const [theme, setThemeState] = useState(getTheme());
+
+  const setTheme = useCallback((next) => {
+    persistTheme(next);
+    setThemeState(next);
+  }, []);
+
+  // Keep 'system' responsive to OS changes while the app is open.
+  useEffect(() => watchSystemTheme(() => theme), [theme]);
 
   const pushToast = useCallback((toast) => {
     const id = crypto.randomUUID();
@@ -74,6 +84,8 @@ export function AppProvider({ children }) {
     toasts,
     celebrate,
     pushToast,
+    theme,
+    setTheme,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

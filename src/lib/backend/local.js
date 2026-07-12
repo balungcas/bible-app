@@ -27,6 +27,7 @@ function db() {
   d.progress ??= [];     // reading progress rows
   d.badges ??= [];       // { user_id, badge_code, earned_at }
   d.attempts ??= [];     // quiz attempts
+  d.highlights ??= [];   // { user_id, book_code, chapter, verse, color }
   d.session ??= null;    // user_id
   return d;
 }
@@ -193,6 +194,45 @@ export function createLocalBackend() {
 
     async getDailyQuizzes(dateStr) {
       return quizzesForDate(dateStr);
+    },
+
+    async getHighlights(userId) {
+      return db()
+        .highlights.filter((h) => h.user_id === userId)
+        .map((h) => ({
+          book_code: h.book_code,
+          chapter: h.chapter,
+          verse: h.verse,
+          color: h.color,
+        }));
+    },
+
+    async setHighlight(userId, bookCode, chapter, verse, color) {
+      const d = db();
+      const i = d.highlights.findIndex(
+        (h) =>
+          h.user_id === userId &&
+          h.book_code === bookCode &&
+          h.chapter === chapter &&
+          h.verse === verse
+      );
+      if (i >= 0) d.highlights[i].color = color;
+      else d.highlights.push({ user_id: userId, book_code: bookCode, chapter, verse, color });
+      save(d);
+    },
+
+    async removeHighlight(userId, bookCode, chapter, verse) {
+      const d = db();
+      d.highlights = d.highlights.filter(
+        (h) =>
+          !(
+            h.user_id === userId &&
+            h.book_code === bookCode &&
+            h.chapter === chapter &&
+            h.verse === verse
+          )
+      );
+      save(d);
     },
 
     // Local mode has a single user, so the "leaderboard" is just you — enough

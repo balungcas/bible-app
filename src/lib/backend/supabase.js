@@ -259,5 +259,36 @@ export function createSupabaseBackend(url, anonKey) {
       throwIf(error);
       return data;
     },
+
+    async getHighlights(userId) {
+      const { data, error } = await supabase
+        .from('verse_highlights')
+        .select('book_code, chapter, verse, color')
+        .eq('user_id', userId);
+      throwIf(error);
+      return data;
+    },
+
+    async setHighlight(userId, bookCode, chapter, verse, color) {
+      const { error } = await supabase.from('verse_highlights').upsert({
+        user_id: userId,
+        book_code: bookCode,
+        chapter,
+        verse,
+        color,
+      });
+      throwIf(error);
+    },
+
+    async removeHighlight(userId, bookCode, chapter, verse) {
+      const { error } = await supabase
+        .from('verse_highlights')
+        .delete()
+        .eq('user_id', userId)
+        .eq('book_code', bookCode)
+        .eq('chapter', chapter)
+        .eq('verse', verse);
+      throwIf(error);
+    },
   };
 }

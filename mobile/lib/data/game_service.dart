@@ -21,6 +21,7 @@ class AppState {
   final List<Map<String, dynamic>> progress;
   final List<String> badges;
   final int quizRun;
+  final Map<String, String> highlights; // 'CODE/chapter/verse' -> color
   const AppState({
     required this.profile,
     required this.entries,
@@ -29,6 +30,7 @@ class AppState {
     required this.progress,
     required this.badges,
     required this.quizRun,
+    required this.highlights,
   });
 }
 
@@ -100,8 +102,15 @@ class GameService {
       backend.getReadingProgress(userId),
       backend.getUserBadges(userId),
       backend.getQuizAttempts(userId),
+      backend.getHighlights(userId),
     ]);
     final streakMap = results[2] as Map<String, dynamic>?;
+    // Keyed 'CODE/chapter/verse' -> color for O(1) reader lookup.
+    final highlights = <String, String>{};
+    for (final h in results[7] as List<Map<String, dynamic>>) {
+      highlights['${h['book_code']}/${h['chapter']}/${h['verse']}'] =
+          h['color'] as String;
+    }
     return AppState(
       profile: results[0] as Map<String, dynamic>?,
       entries: results[1] as List<Map<String, dynamic>>,
@@ -110,6 +119,7 @@ class GameService {
       progress: results[4] as List<Map<String, dynamic>>,
       badges: results[5] as List<String>,
       quizRun: _quizCorrectRun(results[6] as List<Map<String, dynamic>>),
+      highlights: highlights,
     );
   }
 
@@ -188,6 +198,17 @@ class GameService {
     final xpEarned = await _awardXpIfUnderCap(
         userId, 'devotion_read', dateStr, state.xp.todayByAction);
     return ActionResult(xpEarned: xpEarned);
+  }
+
+  // --------------------------------------------------------- Verse highlights
+  /// color == null removes the highlight; otherwise sets/replaces it.
+  Future<void> toggleHighlight(
+      String userId, String bookCode, int chapter, int verse, String? color) async {
+    if (color == null) {
+      await backend.removeHighlight(userId, bookCode, chapter, verse);
+    } else {
+      await backend.setHighlight(userId, bookCode, chapter, verse, color);
+    }
   }
 
   // ------------------------------------------------------------------ Quizzes

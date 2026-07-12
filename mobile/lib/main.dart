@@ -21,27 +21,36 @@ class RtcmBibleApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'RTCM Bible',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF4338CA)),
-        scaffoldBackgroundColor: const Color(0xFFFAFAF9),
-      ),
-      home: ListenableBuilder(
-        listenable: model,
-        builder: (context, _) {
-          if (model.booting) {
-            return const Scaffold(
-              body: Center(child: CircularProgressIndicator()),
-            );
-          }
-          return model.userId == null
-              ? AuthScreen(model: model)
-              : HomeShell(model: model);
-        },
-      ),
+    // Wrap the whole MaterialApp so a theme change rebuilds theme + home.
+    return ListenableBuilder(
+      listenable: model,
+      builder: (context, _) {
+        return MaterialApp(
+          title: 'RTCM Bible',
+          debugShowCheckedModeBanner: false,
+          theme: ThemeData(
+            useMaterial3: true,
+            colorScheme:
+                ColorScheme.fromSeed(seedColor: const Color(0xFF4338CA)),
+            scaffoldBackgroundColor: const Color(0xFFFAFAF9),
+          ),
+          darkTheme: ThemeData(
+            useMaterial3: true,
+            brightness: Brightness.dark,
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: const Color(0xFF4338CA),
+              brightness: Brightness.dark,
+            ),
+            scaffoldBackgroundColor: const Color(0xFF0C0A09),
+          ),
+          themeMode: model.themeMode,
+          home: model.booting
+              ? const Scaffold(body: Center(child: CircularProgressIndicator()))
+              : model.userId == null
+                  ? AuthScreen(model: model)
+                  : HomeShell(model: model),
+        );
+      },
     );
   }
 }

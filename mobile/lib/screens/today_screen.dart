@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../core/dates.dart';
 import '../core/gamification.dart';
+import '../core/journal_style.dart';
 import '../state/app_model.dart';
 import 'home_shell.dart';
 
@@ -26,6 +27,11 @@ class _TodayScreenState extends State<TodayScreen> {
   final _observation = TextEditingController();
   final _application = TextEditingController();
   final _kneel = TextEditingController();
+
+  // Journal styling
+  String _paper = 'plain';
+  List<Sticker> _stickers = [];
+  int? _selectedSticker; // index of sticker showing its remove button
 
   @override
   void initState() {
@@ -70,6 +76,10 @@ class _TodayScreenState extends State<TodayScreen> {
     _observation.text = (entry?['observation'] as String?) ?? '';
     _application.text = (entry?['application'] as String?) ?? '';
     _kneel.text = (entry?['kneel'] as String?) ?? '';
+    final style = JournalStyle.fromJson(entry?['style']);
+    _paper = style.paper;
+    _stickers = style.stickers;
+    _selectedSticker = null;
     setState(() => _soakOpen = true);
   }
 
@@ -86,6 +96,7 @@ class _TodayScreenState extends State<TodayScreen> {
         'observation': _observation.text.trim(),
         'application': _application.text.trim(),
         'kneel': _kneel.text.trim(),
+        'style': JournalStyle(_paper, _stickers).toJson(),
       });
       await widget.model.refresh();
       if (!mounted) return;
@@ -110,6 +121,158 @@ class _TodayScreenState extends State<TodayScreen> {
       ScaffoldMessenger.of(context)
           .showSnackBar(const SnackBar(content: Text('Not quite — read the passage again!')));
     }
+  }
+
+  void _addSticker(String e) {
+    final n = _stickers.length;
+    setState(() => _stickers.add(Sticker(e, 0.2 + ((n * 0.13) % 0.6), 0.12)));
+  }
+
+  // Paper picker + emoji tray.
+  Widget _buildStyleControls(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: 6,
+          children: [
+            for (final p in papers)
+              ChoiceChip(
+                label: Text(paperLabels[p]!),
+                selected: _paper == p,
+                onSelected: (_) => setState(() => _paper = p),
+              ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        Wrap(
+          spacing: 2,
+          children: [
+            for (final e in stickerSet)
+              IconButton(
+                iconSize: 22,
+                visualDensity: VisualDensity.compact,
+                onPressed: () => _addSticker(e),
+                icon: Text(e, style: const TextStyle(fontSize: 22)),
+              ),
+          ],
+        ),
+        Text('Tap an emoji to add it, then drag to place. Tap a sticker to remove.',
+            style: Theme.of(context).textTheme.bodySmall),
+      ],
+    );
+  }
+
+  // Paper-backed canvas holding O/A/K with a draggable sticker overlay.
+  Widget _buildPaperCanvas(BuildContext context) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final w = constraints.maxWidth;
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            decoration: (paperDecoration(_paper) ?? const BoxDecoration())
+                .copyWith(
+              border: Border.all(color: Theme.of(context).dividerColor),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Stack(
+              children: [
+                if (paperPainter(_paper, onSurface) != null)
+                  Positioned.fill(
+                    child: CustomPaint(painter: paperPainter(_paper, onSurface)),
+                  ),
+                Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    children: [
+                      TextField(
+                        controller: _observation,
+                        maxLines: 3,
+                        decoration: const InputDecoration(
+                            labelText: 'O · Observation',
+                            hintText: 'What stands out? What is God saying?',
+                            border: OutlineInputBorder(),
+                            filled: true),
+                      ),
+                      const SizedBox(height: 10),
+                      TextField(
+                        controller: _application,
+                        maxLines: 3,
+                        decoration: const InputDecoration(
+                            labelText: 'A · Application',
+                            hintText: 'One concrete act of obedience today',
+                            border: OutlineInputBorder(),
+                            filled: true),
+                      ),
+                      const SizedBox(height: 10),
+                      TextField(
+                        controller: _kneel,
+                        maxLines: 3,
+                        decoration: const InputDecoration(
+                            labelText: 'K · Kneel (prayer)',
+                            hintText: 'Lord, today…',
+                            border: OutlineInputBorder(),
+                            filled: true),
+                      ),
+                    ],
+                  ),
+                ),
+                // Draggable sticker layer.
+                for (var i = 0; i < _stickers.length; i++)
+                  _buildSticker(i, w),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSticker(int i, double canvasWidth) {
+    final s = _stickers[i];
+    // Height isn't known precisely; approximate with the same width scale is
+    // fine because drag updates use the actual box via local position.
+    return Positioned(
+      left: s.x * canvasWidth - 18,
+      top: s.y * kJournalCanvasHeight - 18,
+      child: GestureDetector(
+        onPanUpdate: (d) {
+          setState(() {
+            s.x = ((s.x * canvasWidth) + d.delta.dx).clamp(0, canvasWidth) /
+                canvasWidth;
+            s.y = ((s.y * kJournalCanvasHeight) + d.delta.dy)
+                    .clamp(0, kJournalCanvasHeight) /
+                kJournalCanvasHeight;
+          });
+        },
+        onTap: () => setState(
+            () => _selectedSticker = _selectedSticker == i ? null : i),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Text(s.e, style: const TextStyle(fontSize: 32)),
+            if (_selectedSticker == i)
+              Positioned(
+                right: -8,
+                top: -8,
+                child: GestureDetector(
+                  onTap: () => setState(() {
+                    _stickers.removeAt(i);
+                    _selectedSticker = null;
+                  }),
+                  child: const CircleAvatar(
+                    radius: 9,
+                    backgroundColor: Colors.red,
+                    child: Icon(Icons.close, size: 12, color: Colors.white),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -256,33 +419,10 @@ class _TodayScreenState extends State<TodayScreen> {
                             hintText: 'John 3:16',
                             border: OutlineInputBorder()),
                       ),
+                      const SizedBox(height: 12),
+                      _buildStyleControls(context),
                       const SizedBox(height: 10),
-                      TextField(
-                        controller: _observation,
-                        maxLines: 3,
-                        decoration: const InputDecoration(
-                            labelText: 'O · Observation',
-                            hintText: 'What stands out? What is God saying?',
-                            border: OutlineInputBorder()),
-                      ),
-                      const SizedBox(height: 10),
-                      TextField(
-                        controller: _application,
-                        maxLines: 3,
-                        decoration: const InputDecoration(
-                            labelText: 'A · Application',
-                            hintText: 'One concrete act of obedience today',
-                            border: OutlineInputBorder()),
-                      ),
-                      const SizedBox(height: 10),
-                      TextField(
-                        controller: _kneel,
-                        maxLines: 3,
-                        decoration: const InputDecoration(
-                            labelText: 'K · Kneel (prayer)',
-                            hintText: 'Lord, today…',
-                            border: OutlineInputBorder()),
-                      ),
+                      _buildPaperCanvas(context),
                       const SizedBox(height: 12),
                       FilledButton(
                         onPressed: _saving ? null : _completeSoak,
@@ -383,12 +523,13 @@ class _QuizTile extends StatelessWidget {
                 onPressed: chosen == null ? () => onChoose(i) : null,
                 style: OutlinedButton.styleFrom(
                   alignment: Alignment.centerLeft,
+                  // Translucent tints read correctly in light and dark.
                   backgroundColor: chosen == null
                       ? null
                       : i == correct
-                          ? Colors.green.shade50
+                          ? Colors.green.withOpacity(0.25)
                           : i == chosen
-                              ? Colors.red.shade50
+                              ? Colors.red.withOpacity(0.25)
                               : null,
                 ),
                 child: Text(choices[i]),
